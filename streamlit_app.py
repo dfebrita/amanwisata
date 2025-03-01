@@ -1,10 +1,10 @@
 import streamlit as st
-from google.generativeai import GenerativeModel
+import google.generativeai as genai
 
 # Show title and description.
-st.title("💬 AmanWisata Chatbot")
+st.title("💬 Aman Wisata Chatbot")
 st.write(
-    "AmanWisata adalah chatbot yang membantu Anda berwisata dengan aman dengan mengetahui lokasi wisata yang aman dari bencana. "
+    "Aman Wisata adalah chatbot yang membantu Anda berwisata dengan aman dengan mengetahui lokasi wisata yang aman dari bencana. "
     "Chatbot ini menggunakan model Google Gemini untuk memberikan informasi yang akurat."
 )
 
@@ -14,7 +14,8 @@ if not api_key:
     st.info("Silakan masukkan Google API key Anda untuk melanjutkan.", icon="🗝️")
 else:
     # Create a Gemini client
-    model = GenerativeModel(api_key=api_key, model_name="gemini-pro")
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-2.0-flash")
 
     # Create a session state variable to store the chat messages
     if "messages" not in st.session_state:
@@ -32,14 +33,13 @@ else:
             st.markdown(prompt)
         
         # Generate a response using Google Gemini
-        response = model.generate_content(
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ]
-        )
-        
-        # Display and store response
-        with st.chat_message("assistant"):
-            st.markdown(response.text)
-        st.session_state.messages.append({"role": "assistant", "content": response.text})
+        try:
+            response = model.generate_content(m["content"] for m in st.session_state.messages
+            )
+
+            # Display and store response
+            with st.chat_message("assistant"):
+                st.markdown(response.text)
+            st.session_state.messages.append({"role": "assistant", "content": response.text})
+        except Exception as e:
+            st.error(f"Error generating response: {e}")
